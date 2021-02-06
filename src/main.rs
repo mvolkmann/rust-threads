@@ -24,7 +24,7 @@ fn main() {
                 let msg = format!("tx from thread {}!", i);
                 tx_clone.send(msg)?;
                 println!("thread {} finished", i);
-                Ok((i, ms)) // thread number and milliseconds slept
+                Ok((i, ms)) // tuple of thread number and milliseconds slept
             },
         ));
     }

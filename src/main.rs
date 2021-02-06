@@ -12,7 +12,12 @@ fn main() {
     let mut handles = Vec::new();
     let mut rng = rand::thread_rng();
     for i in 1..=N {
-        // move is necessary for the closure to take ownership of i.
+        // The "move" keyword below is necessary
+        // for the closure to take ownership of i.
+        // The next gives the rather scary error:
+        // `std::rc::Rc<std::cell::UnsafeCell<rand::rngs::adapter::ReseedingRng
+        // <rand_chacha::chacha::ChaCha12Core, rand::rngs::OsRng>>>`
+        // cannot be sent between threads safely
         handles.push(thread::spawn(move || {
             println!("thread {} started", i);
             // Generate a random number of milliseconds to sleep.

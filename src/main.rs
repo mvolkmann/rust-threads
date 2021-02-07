@@ -15,27 +15,30 @@ fn main() {
         let ms = rng.gen_range(500..5000);
         // The "move" keyword below is necessary for
         // the closure to take ownership of i and ms.
-        let tx_clone = mpsc::Sender::clone(&tx);
+        let tx = mpsc::Sender::clone(&tx);
         handles.push(thread::spawn(
             move || -> Result<(i32, u64), mpsc::SendError<_>> {
                 println!("thread {} started", i);
                 // Generate a random number of milliseconds to sleep.
                 thread::sleep(Duration::from_millis(ms));
                 let msg = format!("tx from thread {}!", i);
-                tx_clone.send(msg)?;
+                tx.send(msg)?;
                 println!("thread {} finished", i);
                 Ok((i, ms)) // tuple of thread number and milliseconds slept
             },
         ));
     }
+    // Need to drop the original sender (tx) so the receiver (rx) so
+    // the loop below can exit after the last tx clone goes out of scope.
+    drop(tx);
 
-    // Listen for channel messages in a different thread
-    // because the loop for receiving them never exits.
-    thread::spawn(move || {
-        for msg in rx {
-            println!("received {}", msg);
-        }
-    });
+    // Listen for channel messages in a different thread.
+    // This is a good way to enable processing the results from each thread
+    // in the order in which they complete
+    // rather than the order in which they were started.
+    for msg in rx {
+        println!("received {}", msg);
+    }
 
     // Wait for all the threads to finish.
     // Results will be processed in the order the threads were created,
